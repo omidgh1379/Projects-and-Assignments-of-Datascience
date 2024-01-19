@@ -1,0 +1,304 @@
+---
+title: "Question 1"
+author: "Arash Bakhshaee for Q1, Omid Ghorbani and Ehsan Mokhtari for Q2"
+date: "2024-01-11"
+output:
+  html_document: default
+  pdf_document: default
+---
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+library(MASS)
+library(stats)
+knitr::opts_chunk$set(echo = TRUE)
+```
+# **SDS HOMEWORK** 
+### **Question 1**
+
+$~$
+There are \(n = 150\) students, and \(k\) of them are liars.
+
+#### Coin Toss Protocol
+1. **Heads**: Classify as Honest
+2. **Tails**: Classify as Liar
+
+#### Simulate a coin toss for a single student
+The result of the coin toss for a single student is:
+
+```{r}
+coin_toss <- sample(c("Heads", "Tails"), 1, replace = TRUE)
+classification <- ifelse(coin_toss == "Heads", "Honest", "Liar")
+classification
+```
+Now, let's simulate the classification for all $n$ students:
+
+#### Simulate the classification for all students
+```{r}
+coin_toss_results <- sample(c("Heads", "Tails"), 150, replace = TRUE)
+classifications <- ifelse(coin_toss_results == "Heads", "Honest", "Liar")
+classifications
+```
+#### Count the number of correctly classified liars
+```{r}
+k_liars <- 10
+correctly_classified_liars <- sum(classifications[1:k_liars] == "Liar")
+correctly_classified_liars
+classifications[1:k_liars]
+```
+#### Calculate the overall accuracy
+```{r}
+accuracy <- correctly_classified_liars / k_liars
+accuracy
+```
+Out of $k$= **r k_liars** liars, the number of correctly classified liars is **r correctly_classified_liars**. The accuracy of the classification is **r accuracy * 100%**.
+
+The key idea is to use a coin toss to randomly assign students to either "Honest" or "Liar" based on the specified protocol.
+$~$
+There are \(n = 150\) students, with \(k\) liars and \(n - k\) honest students.
+$~$
+#### Coin Toss Protocol
+$~$
+- Honest students toss a fair coin \(N\) times, denoted as \(H_j \sim \text{Ber}(p = 0.5)\).
+- Liars toss a biased coin \(N\) times, denoted as \(L_j \sim \text{Ber}(q)\), where \(q > 0.5\).
+$~$
+## Decision Rule
+$~$
+The Prof needs to choose a number \(N\) of tosses, and after \(N\) tosses, decide whether each student is a liar or not.
+$~$
+### Simulation of Decision Rule
+
+Let's simulate the decision rule for a single student:
+
+```{r}
+set.seed(123)  # Set seed for reproducibility
+N_tosses <- 10  # Choose the number of tosses
+
+# Simulate coin tosses for a single honest student
+honest_tosses <- sample(c("H", "T"), N_tosses, replace = TRUE, prob = c(0.5, 0.5))
+honest_probability <- sum(honest_tosses == "H") / N_tosses
+
+# Simulate coin tosses for a single liar student
+q <- 0.7  # Replace with the actual value of q for liars
+liar_tosses <- sample(c("H", "T"), N_tosses, replace = TRUE, prob = c(q, 1 - q))
+liar_probability <- sum(liar_tosses == "H") / N_tosses
+
+# Decision rule: If the observed probability is greater than 0.5, classify as honest; otherwise, classify as liar
+classification <- ifelse(honest_probability > 0.5, "Honest", "Liar")
+classification
+```
+Now, let's simulate the classification for all $n$ students:
+
+```{r}
+# Simulate the classification for all students
+coin_toss_results <- sample(c("Heads", "Tails"), 150, replace = TRUE)
+classifications <- ifelse(coin_toss_results == "Heads", "Honest", "Liar")
+
+# Count the number of correctly classified liars
+correctly_classified_liars <- sum(classifications[1:k_liars] == "Liar")
+
+# Calculate the overall accuracy
+accuracy <- correctly_classified_liars / k_liars
+accuracy
+```
+Now, let's calculate the probabilities of false positive $(α(q))$ and false negative$(β(q))$:
+
+#### Simulate decision rule for all students
+```{r}
+score_function <- function(N, alpha, beta, w, c) {
+  w * alpha + (1 - w) * beta + c * N
+}
+```
+
+```{r}
+n_students <- 150
+classifications <- rep(NA, n_students)
+
+for (i in 1:n_students) {
+  if (i <= k_liars) {
+    liar_tosses <- sample(c("H", "T"), N_tosses, replace = TRUE, prob = c(q, 1 - q))
+    observed_probability <- sum(liar_tosses == "H") / N_tosses
+  } else {
+    honest_tosses <- sample(c("H", "T"), N_tosses, replace = TRUE, prob = c(0.5, 0.5))
+    observed_probability <- sum(honest_tosses == "H") / N_tosses
+  }
+
+  classifications[i] <- ifelse(observed_probability > 0.5, "Honest", "Liar")
+}
+```
+#### Calculate False Positive and False Negative
+```{r}
+n <- length(classifications)
+false_positive <- sum(classifications[1:(n - k_liars)] == "Liar") / (n - k_liars)
+false_negative <- sum(classifications[(n - k_liars + 1):n] == "Honest") / k_liars
+
+cat("False Positive:", false_positive, "\n")
+cat("False Negative:", false_negative, "\n")
+```
+# Calculate the score
+# Example value for w and N
+
+```{r}
+w <- 0.5
+c <- 10 
+N <- 150
+  score_function(N, false_positive, false_negative, w, c)
+```
+# Plot the scores with time constraint
+```{r}
+scores <- score_function(N, false_positive, false_negative, w, c)
+
+# Assuming there is a plot function to visualize the scores
+plot(N, scores, type = "l", xlab = "N values", ylab = "Scores", main = "Scores vs. N")
+```  
+```{r}
+     
+# Function to calculate the score with time constraint based on alpha, beta, N, c, and T
+score_function_with_time <- function(N, alpha, beta, c, T, p) {
+  alpha + beta + c * N + p * max((N - T * 60 / 3), 0)^2
+}
+
+# Example values
+T <- 15
+p <- 0.1
+
+# Calculate scores with time constraint for each N value
+scores_with_time <- sapply(N, function(N) {
+  # Calculate the score with time constraint
+  score_function_with_time(N, false_positive, false_negative, c, T, p)
+})
+
+# Plot the scores with time constraint
+plot(N, scores_with_time, type = "l", xlab = "Number of Tosses (N)", ylab = "Score with Time Constraint",
+     main = "Score with Time Constraint vs. Number of Tosses", col = "red")
+```     
+
+first of all we want a score function that incorporates false positive $(\alpha)$, false negative $(\beta)$, and a time constraint. We'll design a generic score function:
+
+$f(N|\alpha^*,\beta^*,w,c) = w.\alpha + (1-w). \beta+c.N$
+
+$w$ is a weight factor to balance $\alpha$ and $\beta$.
+
+$c$ is the cost per flip in terms of time.
+```{r}
+print("question2 : part a")
+```
+
+Question 2 part a
+
+```{r}
+
+# Step 1: Load necessary libraries
+library(MASS)  # For the true population model Beta distribution
+library(stats) # For the density() function 
+
+# Step 2: Choose parameters for the true population model X ~ Beta(α, β)
+alpha <- 3.9       # beta and alpha have been choosed randomly 
+beta <- 5.2
+
+# Step 3: Generate random samples from the true population model
+set.seed(123) # Set seed for reproducibility
+X <- rbeta(1000, alpha, beta)                # 1000 sample from  BETA(ALPHA , BETA) dist.
+
+# Step 4: transform sample distribution into a histogram first then estimate a smooth line using KDE  
+kde <- density(X, kernel = "epanechnikov", bw = 0.7)  # You can choose the kernel and bandwidth
+# The KDE is an estimated smooth representation of the underlying probability density
+
+# Step 5: Define the quantile function Fb^{-1}(z) for the kernel density estimator
+Fb_inverse <- function(z, kde_density) {
+  # Interpolate quantile function values using density output
+  approx_kde <- approxfun(kde_density$x, cumsum(kde_density$y) / sum(kde_density$y), method = "linear", yleft = 0, yright = 1)
+  return(approx_kde(z))
+}
+
+# Step 6: Test the quantile function with some values
+z_values <- seq(0, 1, by = 0.1)
+quantile_values <- sapply(z_values, function(z) Fb_inverse(z, kde))
+
+# Step 7: Plot the quantile function
+plot(z_values, quantile_values, type = "l", col = "blue", lwd = 2,
+     main = "Quantile Function Fb^{-1}(z) for Kernel Density Estimator",
+     xlab = "z", ylab = "Fb^{-1}(z)")
+
+# Add true quantile function for comparison
+true_quantile_values <- qbeta(z_values, alpha, beta)
+lines(z_values, true_quantile_values, col = "red", lwd = 2, lty = 2)
+
+legend("topright", legend = c("Kernel Density Estimator", "True Beta Quantile"),
+       col = c("blue", "red"), lty = c(1, 2), lwd = 2)
+
+```
+
+Question 2 part b
+```{r}
+print("Question 2 part B")
+```
+```{r}
+# Set up true distribution parameters
+a1 = 2; b1 = 5 
+a2 = 5; b2 = 2
+
+# Set up grid of epsilon values
+eps_grid = c( 0.1, 0.2, 0.3 )
+
+# Initialize vectors to store optimal h
+h_opt1 = numeric(length(eps_grid)) 
+h_opt2 = numeric(length(eps_grid))
+
+
+
+
+# Loop through epsilons 
+for(i in 1:length(eps_grid)){
+  
+  eps = eps_grid[i]
+  
+  # Function to compute Wasserstein distance
+  wass_dist = function(h){
+    x = seq(0,1,length=100)
+    y1 = qbeta(x, a1, b1)
+    y2 = density(y1, h)$y
+    
+    return(sum(abs(y1 - y2)))
+  }
+  
+  # Numerically optimize to find best h
+  h_opt1[i] = optimize(wass_dist, lower=0, upper=1, maximum=FALSE, tol=0.001)$minimum
+  
+  # Repeat for second distribution
+  
+  wass_dist_2 = function(h){
+    x = seq(0,1,length=100)
+    y1 = qbeta(x, a2, b2)
+    y2 = density(y1, h)$y
+    
+    return(sum(abs(y1 - y2)))
+  }
+  
+
+  
+  h_opt2[i] = optimize(wass_dist_2, lower=0, upper=1, maximum=FALSE, tol=0.001)$minimum
+}
+
+# Print results
+print(h_opt1) 
+print(h_opt2)
+
+# Plot densities
+par(mfrow=c(3,2))
+x = seq(0,1,length=100)
+
+for(i in 1:length(eps_grid)){
+  
+  h1 = h_opt1[i]
+  h2 = h_opt2[i]
+  
+  plot(density(qbeta(x, a1, b1), h1), main=paste("E =", eps_grid[i] , 'a = ' , a1 , 'b = ' , b1) )
+  plot(density(qbeta(x, a2, b2), h2), main=paste("E =", eps_grid[i] ,  'a = ' , a2 , 'b = ' , b2) )
+  
+}
+```
+
