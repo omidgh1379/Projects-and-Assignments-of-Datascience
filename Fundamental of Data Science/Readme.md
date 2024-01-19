@@ -8,8 +8,7 @@ This repository contains my solutions for the assignments in the Foundations of 
 1. ### Homework 1 (hw1)
    - Description: First practice of Foundations of Data Science.
    - Files:
-     - [https://github.com/omidgh1379/Projects-and-Assignments-of-Datascience/blob/main/Fundamental%20of%20Data%20Science/FDS_HW1/Final%20HW1.ipynb
-](main file of homework1)
+     - [https://github.com/omidgh1379/Projects-and-Assignments-of-Datascience/blob/main/Fundamental%20of%20Data%20Science/FDS_HW1/Final%20HW1.ipynb](main file of homework1)
 
 2. ### Homework 2 (hw2)
    - Description: Second practice of Foundations of Data Science.
